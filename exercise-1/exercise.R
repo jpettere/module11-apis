@@ -8,14 +8,14 @@ library("jsonlite")
 ## Then send GET() request to fetch the data, then extract the answer to the question
 
 # For what years does the API have statistical data?
-data <- GET("http://data.unhcr.org/api/stats/time_series_years.json")
-response <- content(data,"text")
-years <- fromJSON(response)
+response <- GET("http://data.unhcr.org/api/stats/time_series_years.json")
+body <- content(response,"text")
+years <- fromJSON(body)
 print(years)
 
 # What is the "country code" for the "Syrian Arab Republic"?
-data <- GET("http://data.unhcr.org/api/countries/list.json")
-countries <- fromJSON(content(data, "text"))
+response <- GET("http://data.unhcr.org/api/countries/list.json")
+countries <- fromJSON(content(response, "text"))
 filter(countries, name_en == "Syrian Arab Republic") %>%
   select(country_code)
 
@@ -25,7 +25,7 @@ filter(countries, name_en == "Syrian Arab Republic") %>%
 # See http://www.unhcr.org/en-us/who-we-help.html for details on these terms
 query.parameters <- list(country_of_residence = "USA", country_of_origin = "SYR", year = 2013)
 response <- GET("http://data.unhcr.org/api/stats/persons_of_concern.json", query = query.parameters)
-json.usa <- fromJSON(content(response,"text"))
+persons.usa <- fromJSON(content(response,"text"))
 str(json.usa)
 
 ## And this was only 2013...
@@ -47,7 +47,14 @@ plot(refugees.usa, type="o")
 # How many *refugees* from Syria settled in that country in all years in the data set (2000 through 2013)?
 # Is it more or less than the USA? (Hint: join the tables and add a new column!)
 # Hint: To compare the values, you'll need to convert the data (which is a string) to a number; try using `as.numeric()`
-
+query.parameters <- list(country_of_residence = "TUR", country_of_origin = "SYR", population_type_code = "RF")
+response <- GET("http://data.unhcr.org/api/stats/time_series_all_years.json?", query = query.parameters)
+tur.rf <- fromJSON(content(response, "text"))
+tur.rf <- tur.rf %>% 
+  select(year, tur = value)
+tur.usa.rf <- left_join(refugees.usa, tur.rf)
+tur.usa.rf <- mutate(tur.usa.rf, usa = as.numeric(usa), tur = as.numeric(tur))
+tur.usa.rf <- mutate(tur.usa.rf, usa.more = usa > tur)
 
 
 ## Bonus (not in solution):
