@@ -33,4 +33,5 @@ vignettes/*.pdf
 *.knit.md
 
 .DS_Store
+apikey.R
 
